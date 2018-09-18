@@ -1,0 +1,35 @@
+- request:
+    method: POST
+    url: ^/callback$
+  response:
+    status: 200
+    headers:
+      content-type: application/json
+    body: >
+      {
+        "status": "OK"
+      }
+
+- request:
+    method: POST
+    url: ^/success$
+  response:
+    status: 200
+    headers:
+      content-type: application/json
+    body: >
+      {
+        "status": "OK"
+      }
+
+- request:
+    method: POST
+    url: ^/error$
+  response:
+    status: 400
+    headers:
+      content-type: application/json
+    body: >
+      {
+        "status": "FAILED"
+      }

@@ -1,0 +1,110 @@
+{
+  "name":"teste",
+  "description":"teste",
+  "version":1,
+  "tasks":[
+    {
+      "name":"task_1",
+      "taskReferenceName":"task_1",
+      "inputParameters":{
+        "input_1": "${workflow.input.input_1}"
+      },
+      "type":"SIMPLE"
+    },
+    {
+      "name":"task_1",
+      "taskReferenceName":"task_1_http",
+      "inputParameters":{
+        "http_request":{
+          "uri":"http://10.0.1.238:8883/success",
+          "method":"POST",
+          "headers":{
+            "content-type":"application/json",
+            "Authorization":"${workflow.input.authorization}",
+            "x-flow-id":"${workflow.input.flowId}",
+            "x-execution-id":"${workflow.input.executionId}",
+            "x-correlation-id":"${workflow.correlationId}",
+            "foo":"${task_1.output.foo}",
+            "bar":"${task_1.output.bar}"
+          }
+        }
+      },
+      "type":"HTTP"
+    },
+    {
+      "name":"task_2",
+      "taskReferenceName":"task_2",
+      "optional": true,
+      "inputParameters":{
+        "http_request":{
+          "uri":"http://10.0.1.238:8883/callback",
+          "method":"POST",
+          "headers":{
+            "content-type":"application/json",
+            "Authorization":"${workflow.input.authorization}",
+            "x-flow-id":"${workflow.input.flowId}",
+            "x-execution-id":"${workflow.input.executionId}"
+          }
+        }
+      },
+      "type":"HTTP"
+    },
+    {
+      "name": "decide_task",
+      "taskReferenceName": "decide1",
+      "inputParameters": {
+        "statusCode": "${task_2.output.response.statusCode}"
+      },
+      "type": "DECISION",
+      "caseValueParam": "statusCode",
+      "caseExpression": "if ($.statusCode >= 200 && $.statusCode < 300) '200'; else '400';",
+      "decisionCases": {
+        "200": [
+          {
+            "name":"task_3",
+            "taskReferenceName":"task_3",
+            "inputParameters":{
+              "http_request":{
+                "uri":"http://10.0.1.238:8883/success",
+                "method":"POST",
+                "headers":{
+                  "content-type":"application/json",
+                  "Authorization":"${workflow.input.authorization}",
+                  "x-flow-id":"${workflow.input.flowId}",
+                  "x-execution-id":"${workflow.input.executionId}"
+                }
+              }
+            },
+            "type":"HTTP"
+          }
+        ],
+        "400": [
+          {
+            "name":"task_4",
+            "taskReferenceName":"task_4",
+            "optional": true,
+            "inputParameters":{
+              "http_request":{
+                "uri":"http://10.0.1.238:8883/error",
+                "method":"POST",
+                "headers":{
+                  "content-type":"application/json",
+                  "Authorization":"${workflow.input.authorization}",
+                  "x-flow-id":"${workflow.input.flowId}",
+                  "x-execution-id":"${workflow.input.executionId}"
+                }
+              }
+            },
+            "type":"HTTP"
+          }
+        ]
+      }
+    }
+  ],
+  "outputParameters":{
+    "statuses":"${get_es_1.output..status}",
+    "workflowIds":"${get_es_1.output..workflowId}"
+  },
+  "restartable":true,
+  "schemaVersion":2
+}
