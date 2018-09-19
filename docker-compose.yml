@@ -1,0 +1,48 @@
+version: '2'
+services:
+  stubby4j:
+    image: sandokandias/stubby4j-docker
+    ports:
+    - "8883:8883"
+    environment:
+      STUBBY_PORT: 8883
+    volumes:
+    - ./stubby.yml:/usr/local/stubby.yml
+
+  # Docker compose for netflix conductor + elasticsearch + dynomite
+  conductor-server:
+    image: tafael/conductor:server
+    ports:
+    - 8080:8080
+    links:
+    - elasticsearch:es
+    - dynomite:dyno1
+
+  conductor-ui:
+    environment:
+    - WF_SERVER=http://conductor-server:8080/api/
+    image: tafael/conductor:ui
+    ports:
+    - 5000:5000
+    links:
+    - conductor-server
+
+  dynomite:
+    image: v1r3n/dynomite
+    ports:
+    - 8102:8102
+
+  elasticsearch:
+    ports:
+    - 9200:9200
+    - 9300:9300
+    image: "docker.elastic.co/elasticsearch/elasticsearch:5.4.2"
+    environment:
+    - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    - xpack.security.enabled=false
+    - bootstrap.memory_lock=true
+    - discovery.type=single-node
+    - network.host=0.0.0.0
+    - transport.host=0.0.0.0
+    volumes:
+    - ${PWD}/elasticsearch-conf/scripts:/usr/share/elasticsearch/config/scripts
