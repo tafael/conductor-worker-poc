@@ -15,8 +15,8 @@ services:
     ports:
     - 8080:8080
     links:
-    - elasticsearch:es
-    - dynomite:dyno1
+    - elasticsearch
+    - dynomite
 
   conductor-ui:
     environment:
@@ -44,5 +44,3 @@ services:
     - discovery.type=single-node
     - network.host=0.0.0.0
     - transport.host=0.0.0.0
-    volumes:
-    - ${PWD}/elasticsearch-conf/scripts:/usr/share/elasticsearch/config/scripts
