@@ -31,6 +31,8 @@ services:
     image: v1r3n/dynomite
     ports:
     - 8102:8102
+    logging:
+      driver: none
 
   elasticsearch:
     ports:
