@@ -1,7 +1,7 @@
 version: '2'
 services:
   stubby4j:
-    image: sandokandias/stubby4j-docker
+    image: tafael/stubby4j
     ports:
     - "8883:8883"
     environment:

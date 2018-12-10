@@ -29,6 +29,8 @@ class SampleWorker(
         result.outputData["foo"] = "foo"
         result.outputData["bar"] = "bar"
 
+        result.log("Executed task with success !!!")
+
         return result
     }
 
