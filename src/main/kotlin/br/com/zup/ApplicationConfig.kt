@@ -1,5 +1,6 @@
 package br.com.zup
 
+import br.com.zup.client.EventClient
 import br.com.zup.worker.SampleWorker
 import com.netflix.conductor.client.http.MetadataClient
 import com.netflix.conductor.client.http.TaskClient
@@ -39,6 +40,12 @@ open class ApplicationConfig {
             WorkflowClient().apply {
                 setRootURI(rootUri)
             }
+
+    @Bean
+    open fun eventClient(): EventClient =
+        EventClient().apply {
+            setRootURI(rootUri)
+        }
 
     @Bean
     open fun coordinator(
