@@ -18,6 +18,7 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 @RunWith(SpringRunner::class)
 @SpringBootTest(classes = [ApplicationConfig::class])
@@ -36,11 +37,15 @@ class EventTest {
 
     val failEventEmitterWorkflowDef = failEventEmitterWorkflowDef()
 
+    val startWorkflowEmitterWorkflowDef = startWorkflowEmitterWorkflowDef()
+
     val waitWorkflowDef = receiverWorkflowDef()
 
     val completeTaskEventHandler = completeTaskEventHandler()
 
     val failTaskEventHandler = failTaskEventHandler()
+
+    val startWorkflowHandler = startWorkflowHandler()
 
     @BeforeTest
     fun setup() {
@@ -48,14 +53,17 @@ class EventTest {
             listOf(
                 taskDef("complete_event"),
                 taskDef("fail_event"),
-                taskDef("wait_1")
+                taskDef("wait_1"),
+                taskDef("start_workflow")
             )
         )
         metadataClient.registerWorkflowDef(completeEventEmitterWorkflowDef)
         metadataClient.registerWorkflowDef(failEventEmitterWorkflowDef)
-        metadataClient.registerWorkflowDef(waitWorkflowDef);
+        metadataClient.registerWorkflowDef(startWorkflowEmitterWorkflowDef)
+        metadataClient.registerWorkflowDef(waitWorkflowDef)
         eventClient.addEventHandler(completeTaskEventHandler)
         eventClient.addEventHandler(failTaskEventHandler)
+        eventClient.addEventHandler(startWorkflowHandler)
     }
 
     @AfterTest
@@ -63,11 +71,20 @@ class EventTest {
         metadataClient.unregisterTaskDef("complete_event")
         metadataClient.unregisterTaskDef("fail_event")
         metadataClient.unregisterTaskDef("wait_1")
-        metadataClient.unregisterWorkflowDef(completeEventEmitterWorkflowDef.name, completeEventEmitterWorkflowDef.version)
+        metadataClient.unregisterTaskDef("start_workflow")
+        metadataClient.unregisterWorkflowDef(
+            completeEventEmitterWorkflowDef.name,
+            completeEventEmitterWorkflowDef.version
+        )
         metadataClient.unregisterWorkflowDef(failEventEmitterWorkflowDef.name, failEventEmitterWorkflowDef.version)
+        metadataClient.unregisterWorkflowDef(
+            startWorkflowEmitterWorkflowDef.name,
+            startWorkflowEmitterWorkflowDef.version
+        )
         metadataClient.unregisterWorkflowDef(waitWorkflowDef.name, waitWorkflowDef.version)
         eventClient.removeEventHandler(completeTaskEventHandler.name)
         eventClient.removeEventHandler(failTaskEventHandler.name)
+        eventClient.removeEventHandler(startWorkflowHandler.name)
     }
 
     @Test
@@ -114,8 +131,25 @@ class EventTest {
         assertEquals(Workflow.WorkflowStatus.FAILED, workflow.status)
     }
 
+    @Test
     fun `should start workflow execution after event`() {
+        // workflow that emits the event
+        val workflowId = workflowClient.startWorkflow(StartWorkflowRequest().apply {
+            name = startWorkflowEmitterWorkflowDef.name
+            input = mapOf(
+                "workflowType" to waitWorkflowDef.name
+            )
+        })
 
+        Thread.sleep(3000)
+
+//        val workflow = workflowClient.getWorkflow(workflowId, true)
+//        val startedWorkflowId: String = workflow.tasks.get(0).outputData.get("workflowId") as String
+//
+//        val startedWorkflow = workflowClient.getWorkflow(startedWorkflowId, false)
+//
+//        assertNotNull(startedWorkflow)
+//        assertEquals(waitWorkflowDef.name, startedWorkflow.workflowName)
     }
 
     private fun completeTaskEventHandler() =
@@ -144,6 +178,23 @@ class EventTest {
                     fail_task = EventHandler.TaskDetails().apply {
                         workflowId = "\${waitWorkflowId}"
                         taskRefName = "wait_1"
+                    }
+                }
+            )
+            isActive = true
+        }
+
+    private fun startWorkflowHandler(): EventHandler =
+        EventHandler().apply {
+            name = "start_workflow_event_handler"
+            event = "conductor:start_workflow:start_workflow"
+            actions = listOf(
+                EventHandler.Action().apply {
+                    action = EventHandler.Action.Type.start_workflow
+                    start_workflow = EventHandler.StartWorkflow().apply {
+                        name = waitWorkflowDef.name
+                        version = waitWorkflowDef.version
+                        correlationId = "started_by_event"
                     }
                 }
             )
@@ -225,4 +276,28 @@ class EventTest {
             taskReferenceName = "wait_1"
             type = "WAIT"
         }
+
+    private fun startWorkflowEmitterWorkflowDef() =
+        WorkflowDef().apply {
+            name = "start_workflow"
+            description = "Start Workflow"
+            version = 1
+            tasks = listOf(
+                startWorkflowEventTask()
+            )
+            isRestartable = true
+            schemaVersion = 2
+        }
+
+    private fun startWorkflowEventTask(): WorkflowTask =
+        WorkflowTask().apply {
+            name = "start_workflow"
+            taskReferenceName = "start_workflow"
+            inputParameters = mapOf(
+                "workflowType" to "\${workflow.input.workflowType}"
+            )
+            type = "EVENT"
+            sink = "conductor"
+        }
+
 }
