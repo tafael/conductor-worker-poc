@@ -12,7 +12,6 @@ import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.junit4.SpringRunner
-import java.util.LinkedList
 import java.util.UUID
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -34,13 +33,15 @@ class WorkflowExecutionTest {
     @BeforeTest
     fun setup() {
         // register workflow definition
-        metadataClient.registerTaskDefs(listOf(
-            taskDef("task_1"),
-            taskDef("task_2"),
-            taskDef("task_3"),
-            taskDef("task_4"),
-            taskDef("decide_task")
-        ))
+        metadataClient.registerTaskDefs(
+            listOf(
+                taskDef("task_1"),
+                taskDef("task_2"),
+                taskDef("task_3"),
+                taskDef("task_4"),
+                taskDef("decide_task")
+            )
+        )
         metadataClient.registerWorkflowDef(workflowDefinition);
     }
 
@@ -85,13 +86,11 @@ class WorkflowExecutionTest {
             name = "teste"
             description = "description"
             version = 1
-            tasks = LinkedList(
-                listOf(
-                    task1(),
-                    task1http(),
-                    task2(),
-                    decideTask()
-                )
+            tasks = listOf(
+                task1(),
+                task1http(),
+                task2(),
+                decideTask()
             )
             outputParameters = mapOf(
                 "statuses" to "\${get_es_1.output..status}",
@@ -167,12 +166,12 @@ class WorkflowExecutionTest {
             caseValueParam = "statusCode"
             caseExpression = "if (\$.statusCode >= 200 && \$.statusCode < 300) '200'; else '400';"
             decisionCases = mapOf(
-                "200" to LinkedList(listOf(
+                "200" to listOf(
                     task3()
-                )),
-                "400" to LinkedList(listOf(
+                ),
+                "400" to listOf(
                     task4()
-                ))
+                )
             )
         }
 

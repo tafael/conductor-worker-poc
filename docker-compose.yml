@@ -12,8 +12,12 @@ services:
   # Docker compose for netflix conductor + elasticsearch + dynomite
   conductor-server:
     image: tafael/conductor:server
+    environment:
+      - CONFIG_PROP=/app/config/conductor-config.properties
     ports:
       - 8080:8080
+    volumes:
+      - ./conductor-config.properties:/app/config/conductor-config.properties
     depends_on:
       elasticsearch:
         condition: service_healthy

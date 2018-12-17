@@ -14,4 +14,8 @@ class EventClient : ClientBase(DefaultClientConfig(), DefaultConductorClientConf
         this.postForEntityWithRequestOnly("event", eventHandler)
     }
 
+    fun removeEventHandler(eventName: String) {
+        delete("event/{eventName}", eventName)
+    }
+
 }
