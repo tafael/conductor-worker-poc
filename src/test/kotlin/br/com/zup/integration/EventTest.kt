@@ -85,7 +85,7 @@ class EventTest {
             )
         })
 
-        Thread.sleep(60000)
+        Thread.sleep(3000)
 
         val workflow = workflowClient.getWorkflow(waitWorkflowId, false)
 
@@ -107,7 +107,7 @@ class EventTest {
             )
         })
 
-        Thread.sleep(60000)
+        Thread.sleep(3000)
 
         val workflow = workflowClient.getWorkflow(waitWorkflowId, false)
 
