@@ -58,6 +58,12 @@
             <groupId>com.netflix.conductor</groupId>
             <artifactId>conductor-client</artifactId>
             <version>${conductor.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.github.vmg.protogen</groupId>
+                    <artifactId>protogen-annotations</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
